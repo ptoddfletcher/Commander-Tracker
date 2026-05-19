@@ -291,7 +291,7 @@
     };
 
     const params = new URLSearchParams(window.location.search);
-    const roomId = (params.get("room") || "dmv").toLowerCase().replace(/[^a-z0-9_-]/g, "").slice(0, 32);
+    const roomId = "lgs";
     document.getElementById("loadingSub").textContent = `ROOM: ${roomId}`;
 
     const app = initializeApp(firebaseConfig);
