@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>COMMANDER | Tracker</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=EB+Garamond:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <style>
+    :root { --gold: #d4af37; --obsidian: #0a0a0a; --parchment: #e0d9c1; }
+
+    body {
+      background-color: var(--obsidian);
+      color: var(--parchment);
+      font-family: 'EB Garamond', serif;
+      background-image: url('https://www.transparenttextures.com/patterns/dark-leather.png');
+      -webkit-tap-highlight-color: transparent;
+      padding-top: 1rem;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .font-cinzel { font-family: 'Cinzel', serif; text-transform: uppercase; }
+    .gold-border { border: 1px solid var(--gold); box-shadow: 0 0 10px rgba(212, 175, 55, 0.2); }
+
+    .text-gold { color: var(--gold) !important; }
+    .border-gold { border-color: var(--gold) !important; }
+    .border-t-gold { border-top-color: var(--gold) !important; }
+    .border-gold\/10 { border-color: rgba(212, 175, 55, 0.10) !important; }
+    .border-gold\/20 { border-color: rgba(212, 175, 55, 0.20) !important; }
+    .text-gold\/40 { color: rgba(212, 175, 55, 0.40) !important; }
+    .text-gold\/50 { color: rgba(212, 175, 55, 0.50) !important; }
+    .text-gold\/60 { color: rgba(212, 175, 55, 0.60) !important; }
+    .text-gold\/80 { color: rgba(212, 175, 55, 0.80) !important; }
+    .hover\:text-gold:hover { color: var(--gold) !important; }
+    .hover\:border-gold:hover { border-color: var(--gold) !important; }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #3d3422 0%, #1a1a1a 100%);
+      border: 1px solid var(--gold);
+    }
+
+    input, select, textarea {
+      background: rgba(26, 26, 26, 0.9) !important;
+      border: 1px solid #3d3422 !important;
+      color: var(--parchment) !important;
+    }
+
+    .mox-bar {
+      position: relative;
+      height: 72px;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      margin-bottom: 12px;
+      background: #111;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+    }
+    .mox-art {
+      position: absolute; inset: 0;
+      background-size: cover;
+      background-position: center 25%;
+      filter: saturate(1.4) contrast(1.1);
+    }
+    .mox-color { position: absolute; inset: 0; }
+
+    .mox-tint {
+      position: absolute; inset: 0;
+      opacity: 0.85;
+      mix-blend-mode: hard-light;
+      z-index: 2;
+    }
+
+    .mox-pairing .mox-art {
+      filter: grayscale(1) saturate(0.2) contrast(1.1) brightness(0.8);
+    }
+    .mox-pairing .mox-tint {
+      mix-blend-mode: multiply;
+      opacity: 0.75;
+    }
+
+    .mox-overlay {
+      position: absolute; inset: 0;
+      display: flex; align-items: center;
+      padding: 0 20px;
+      justify-content: space-between;
+      background: linear-gradient(90deg, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.1) 50%, rgba(0,0,0,0.85) 100%);
+      z-index: 10;
+    }
+    .mox-fill {
+      position: absolute; bottom: 0; right: 0; height: 100%; width: 4px;
+      background: var(--gold);
+      box-shadow: 0 0 12px var(--gold);
+      z-index: 15;
+    }
+    .mox-text-main {
+      font-size: 16px;
+      font-weight: 700;
+      color: #ffffff;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.9);
+    }
+    .mox-text-sub {
+      font-size: 10px;
+      color: rgba(255,255,255,0.8);
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+    }
+    .stat-card {
+      background: rgba(15, 15, 15, 0.95);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+      padding: 24px;
+    }
+    .victor-selector {
+      display: block; width: 100%; padding: 12px; text-align: center;
+      border: 1px solid rgba(255, 255, 255, 0.1); background: rgba(255, 255, 255, 0.02);
+      font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.4); cursor: pointer; border-radius: 4px;
+      transition: all 0.2s ease;
+    }
+    input[name="winner"]:checked + .victor-selector {
+      border-color: var(--gold); background: rgba(212, 175, 55, 0.2);
+      color: var(--gold);
+    }
+    #loadingOverlay {
+      position: fixed; inset: 0; background: var(--obsidian); z-index: 5000;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+    }
+
+    .leaderboard {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .leader-row {
+      display: grid;
+      grid-template-columns: 44px 1fr 90px 70px;
+      align-items: center;
+      padding: 12px 14px;
+      border-radius: 10px;
+      background: rgba(0,0,0,0.35);
+      border: 1px solid rgba(255,255,255,0.08);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .leader-accent {
+      position: absolute;
+      inset: 0;
+      opacity: 0.55;
+      mix-blend-mode: screen;
+      pointer-events: none;
+    }
+
+    .leader-rank {
+      font-family: 'Cinzel', serif;
+      color: rgba(255,255,255,0.75);
+      font-size: 14px;
+      letter-spacing: 0.06em;
+      z-index: 1;
+    }
+
+    .leader-name {
+      font-size: 18px;
+      font-weight: 700;
+      color: #fff;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.85);
+      min-width: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      z-index: 1;
+    }
+
+    .leader-wl {
+      font-size: 12px;
+      color: rgba(255,255,255,0.65);
+      text-align: right;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      white-space: nowrap;
+      z-index: 1;
+    }
+
+    .leader-pct {
+      font-size: 18px;
+      font-weight: 800;
+      color: #fff;
+      text-align: right;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.85);
+      white-space: nowrap;
+      z-index: 1;
+    }
+  </style>
+</head>
+
+<body class="p-4">
+  <datalist id="commanderSuggestions"></datalist>
+
+  <div id="loadingOverlay">
+    <div class="w-12 h-12 border-2 border-gold/10 border-t-gold rounded-full animate-spin mb-4"></div>
+    <div class="font-cinzel text-gold tracking-widest text-sm">Synchronizing Vault</div>
+    <div id="loadingSub" class="mt-2 text-xs text-white/40 tracking-widest"></div>
+  </div>
+
+  <div class="max-w-7xl mx-auto">
+    <header class="text-center mb-10">
+      <h1 class="text-5xl md:text-7xl text-gold font-cinzel tracking-widest">COMMANDER</h1>
+      <p class="text-gold/50 text-xs tracking-[0.5em] uppercase mt-2">The DMV Chronicles</p>
+    </header>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <aside class="lg:col-span-4 space-y-6">
+        <div class="stat-card gold-border">
+          <h2 id="formTitle" class="font-cinzel text-gold text-sm tracking-widest border-b border-gold/20 pb-4 mb-6">Log Match</h2>
+
+          <form id="gameForm" class="space-y-4">
+            <input type="hidden" id="editingMatchId" value="">
+            <div class="grid grid-cols-2 gap-3">
+              <input type="date" id="dateInput" class="p-3 text-sm">
+              <div class="flex items-center bg-black/20 border border-[#3d3422] rounded overflow-hidden">
+                <span class="px-3 text-[10px] text-gold/60 font-cinzel">Bracket</span>
+                <select id="bracketInput" class="flex-1 p-3 text-sm !border-none">
+                  <option value="1">1</option>
+                  <option value="2">2</option>
+                  <option value="3" selected>3</option>
+                  <option value="4">4</option>
+                  <option value="5">5</option>
+                </select>
+              </div>
+            </div>
+
+            <div id="participantsList" class="space-y-3"></div>
+
+            <button type="button" onclick="addParticipantRow()" class="w-full py-3 border border-dashed border-white/20 text-[10px] text-white/40 uppercase tracking-widest hover:border-gold hover:text-gold transition-all">
+              + Add Player
+            </button>
+            <button type="submit" id="submitBtn" class="btn-primary w-full py-4 text-gold font-cinzel rounded uppercase tracking-widest">Log Victory</button>
+          </form>
+        </div>
+      </aside>
+
+      <main class="lg:col-span-8 space-y-8">
+        <div class="stat-card">
+          <h3 class="text-[10px] font-cinzel text-gold/80 mb-6 tracking-widest text-center">Top Players</h3>
+          <div id="chartPlayerWinRate"></div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="stat-card">
+            <h3 class="text-[10px] font-cinzel text-gold/80 mb-6 tracking-widest text-center">Top Commanders</h3>
+            <div id="chartTopCommanders" class="space-y-2"></div>
+          </div>
+          <div class="stat-card">
+            <h3 class="text-[10px] font-cinzel text-gold/80 mb-6 tracking-widest text-center">Top Pairings</h3>
+            <div id="chartComboWinRate" class="space-y-2"></div>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <h2 class="text-xs text-gold font-cinzel mb-8 tracking-widest border-b border-white/5 pb-4">Chronicle History</h2>
+          <div id="historyBody" class="space-y-6"></div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import {
+      getFirestore,
+      collection,
+      doc,
+      setDoc,
+      deleteDoc,
+      onSnapshot
+    } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBvLEJw2W453W2evA6R4QqeZJ8UrAWlhOY",
+      authDomain: "commander-tracker-ptf.firebaseapp.com",
+      projectId: "commander-tracker-ptf",
+      storageBucket: "commander-tracker-ptf.firebasestorage.app",
+      messagingSenderId: "832799627243",
+      appId: "1:832799627243:web:f50917aadf4b0b1d0b6bae",
+      measurementId: "G-D0FCBEFPK5"
+    };
+
+    const params = new URLSearchParams(window.location.search);
+    const roomId = (params.get("room") || "dmv").toLowerCase().replace(/[^a-z0-9_-]/g, "").slice(0, 32);
+    document.getElementById("loadingSub").textContent = `ROOM: ${roomId}`;
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    let games = [];
+    let deckData = {};
+    let lastApiResults = [];
+
+    const PLAYER_COLORS = {
+      'paul': 'linear-gradient(135deg, #3b82f6 0%, #7c3aed 55%, #4c1d95 100%)',
+      'jay':     'linear-gradient(135deg, #00ff6a 0%, #22c55e 55%, #14532d 100%)',
+      'andrew':  'linear-gradient(135deg, #ff2d2d 0%, #ef4444 55%, #7f1d1d 100%)',
+      'sean':    'linear-gradient(135deg, #ff8a00 0%, #f97316 55%, #7c2d12 100%)',
+      'michael': 'linear-gradient(135deg, #ffe600 0%, #facc15 55%, #a16207 100%)',
+      'miguel':  'linear-gradient(135deg, #00f5ff 0%, #22d3ee 55%, #0e7490 100%)',
+      'clay':    'linear-gradient(135deg, #ff4dd8 0%, #fb7185 55%, #be123c 100%)', // hot pink -> red-pink
+      'thomas':  'linear-gradient(135deg, #b6ff00 0%, #84cc16 55%, #3f6212 100%)', // lime -> olive
+      'nick':    'linear-gradient(135deg, #ff3d00 0%, #fb923c 55%, #9a3412 100%)', // bright orange -> burnt orange
+      'mueller': 'linear-gradient(135deg, #a855f7 0%, #d946ef 55%, #86198f 100%)', // purple -> magenta
+      'unknown': 'linear-gradient(135deg, #14b8a6 0%, #0f766e 55%, #134e4a 100%)'  // teal
+    };
+
+    const IDENTITY_MAP = { 'W': '#fefefe', 'U': '#2563eb', 'B': '#18181b', 'R': '#dc2626', 'G': '#16a34a' };
+
+    const getPlayerColor = (name) => {
+      const n = name?.trim().toLowerCase() || 'unknown';
+      return PLAYER_COLORS[n] || PLAYER_COLORS['unknown'];
+    };
+
+    const displayName = (value, fallback = 'Unknown') => {
+      const raw = String(value || '').trim();
+      if (!raw) return fallback;
+      return raw
+        .toLowerCase()
+        .split(/\s+/)
+        .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+        .join(' ');
+    };
+
+    const commanderKey = (value) => String(value || '').trim().toUpperCase();
+
+    const renderBar = (title, subtitle, rate, background, art = '', isTinted = false, playerColor = '', extra = '', isWinner = false) => `
+      <div class="mox-bar ${isTinted ? 'mox-pairing' : ''}">
+        ${art ? `<div class="mox-art" style="background-image:url('${art}')"></div>` : `<div class="mox-color" style="background:${background || '#333'}"></div>`}
+        ${isTinted ? `<div class="mox-tint" style="background:${playerColor}"></div>` : ''}
+        <div class="mox-overlay">
+          <div class="flex flex-col flex-1 min-w-0 pr-3">
+            ${subtitle ? `<span class="mox-text-sub truncate">${subtitle}</span>` : ''}
+            <span class="mox-text-main truncate">${title}</span>
+            ${extra ? `<span class="text-[9px] text-white/50 font-mono mt-1 truncate">${extra}</span>` : ''}
+          </div>
+          <span class="mox-text-main whitespace-nowrap">${rate}%</span>
+        </div>
+        ${isWinner ? '<div class="mox-fill"></div>' : ''}
+      </div>`;
+
+    const roomRoot = (...segs) => doc(db, "rooms", roomId, ...segs);
+    const roomCol  = (...segs) => collection(db, "rooms", roomId, ...segs);
+
+    const deckDocRef = roomRoot("deck_arts", "global");
+    const matchesColRef = roomCol("matches");
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        try {
+          await signInAnonymously(auth);
+        } catch (err) {
+          console.error("Anonymous auth failed:", err);
+          document.getElementById("loadingSub").textContent = `Auth error: ${err.code || err.message}`;
+        }
+        return;
+      }
+
+      onSnapshot(
+        deckDocRef,
+        (s) => {
+          if (s.exists()) {
+            deckData = s.data() || {};
+            render();
+          }
+        },
+        (err) => console.error("Firestore deck art listener failed:", err)
+      );
+
+      onSnapshot(
+        matchesColRef,
+        (s) => {
+          games = s.docs.map(d => ({ id: d.id, ...d.data() }))
+            .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+          render();
+          document.getElementById("loadingOverlay").style.display = "none";
+        },
+        (err) => {
+          console.error("Firestore matches listener failed:", err);
+          document.getElementById("loadingSub").textContent = `Firestore error: ${err.code || err.message}`;
+        }
+      );
+    });
+
+    function updateDatalist(items = []) {
+      const list = document.getElementById('commanderSuggestions');
+      if (!list) return;
+
+      const cleanItems = [...new Set(
+        (items || [])
+          .filter(Boolean)
+          .map(x => String(x).trim().toUpperCase())
+          .filter(Boolean)
+      )].slice(0, 15);
+
+      list.innerHTML = "";
+      cleanItems.forEach(k => {
+        const opt = document.createElement('option');
+        opt.value = k;
+        list.appendChild(opt);
+      });
+    }
+
+    function render() {
+      const hist = document.getElementById('historyBody');
+            hist.innerHTML = (games || []).map(g => `
+        <div class="history-card">
+          <div class="flex justify-between items-center text-[10px] mb-4 font-cinzel tracking-widest text-gold/40 border-b border-white/5 pb-2">
+            <span>${g.date || ''} — BRACKET ${g.bracket || ''}</span>
+          </div>
+          <div class="grid gap-3" style="grid-template-columns: repeat(${Math.min((g.participants || []).length, 6)}, minmax(0, 1fr));">
+            ${(g.participants || []).map(p => {
+              const key = commanderKey(p.commander);
+              const data = (deckData && deckData[key]) ? deckData[key] : {};
+              return `
+                <div class="text-center min-w-0">
+                  <div class="aspect-[3/4] rounded border ${p.winner ? 'border-gold' : 'border-white/10'} overflow-hidden relative">
+                    <div class="w-full h-full bg-cover bg-center ${p.winner ? '' : 'grayscale opacity-40'}" style="background-image:url('${data.art || ''}')"></div>
+                  </div>
+                  <div class="mt-1 text-[9px] font-cinzel truncate ${p.winner ? 'text-gold' : 'text-white/30'}">${p.name || ''}</div>
+                </div>`;
+            }).join('')}
+          </div>
+        </div>
+      `).join('');
+
+      const plays = {}, commanderStats = {}, comboStats = {};
+      (games || []).forEach(g => {
+        (g.participants || []).forEach(p => {
+          const name = displayName(p.name);
+          if (!plays[name]) plays[name] = { w: 0, l: 0, t: 0 };
+          plays[name].t++;
+          if (p.winner) plays[name].w++; else plays[name].l++;
+
+          const cName = commanderKey(p.commander) || 'UNKNOWN';
+          if (!commanderStats[cName]) commanderStats[cName] = { w: 0, t: 0 };
+          commanderStats[cName].t++;
+          if (p.winner) commanderStats[cName].w++;
+
+          const key = `${name}|${cName}`;
+          if (!comboStats[key]) comboStats[key] = { w: 0, t: 0, commander: cName, name: name };
+          comboStats[key].t++;
+          if (p.winner) comboStats[key].w++;
+        });
+      });
+
+      const sortedPlayers = Object.keys(plays)
+        .sort((a, b) => {
+          const rateA = plays[a].w / plays[a].t;
+          const rateB = plays[b].w / plays[b].t;
+          return rateB - rateA || plays[b].w - plays[a].w || plays[b].t - plays[a].t || a.localeCompare(b);
+        });
+
+      document.getElementById('chartPlayerWinRate').innerHTML = `
+        <div class="leaderboard">
+          ${sortedPlayers.map((p, i) => {
+            const w = plays[p].w, l = plays[p].l, t = plays[p].t;
+            const pct = t ? Math.round((w / t) * 100) : 0;
+            const accent = getPlayerColor(p);
+            return `
+              <div class="leader-row">
+                <div class="leader-accent" style="background:${accent}"></div>
+                <div class="leader-rank">#${i + 1}</div>
+                <div class="leader-name">${p}</div>
+                <div class="leader-wl">${w}W - ${l}L</div>
+                <div class="leader-pct">${pct}%</div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+
+      const topC = Object.keys(commanderStats)
+        .sort((a, b) => {
+          const rateA = commanderStats[a].w / commanderStats[a].t;
+          const rateB = commanderStats[b].w / commanderStats[b].t;
+          return rateB - rateA || commanderStats[b].w - commanderStats[a].w || commanderStats[b].t - commanderStats[a].t || a.localeCompare(b);
+        })
+        .slice(0, 15);
+
+      document.getElementById('chartTopCommanders').innerHTML = topC.map(c => {
+        const data = (deckData && deckData[c]) ? deckData[c] : {};
+        const grad = (data.identity && data.identity.length) ? IDENTITY_MAP[data.identity[0]] : '#333';
+        return renderBar(
+          c,
+          null,
+          Math.round((commanderStats[c].w / commanderStats[c].t) * 100),
+          grad,
+          data.art || '',
+          false,
+          '',
+          '',
+          (commanderStats[c].w / commanderStats[c].t) >= 0.5
+        );
+      }).join('');
+
+      const topCombo = Object.keys(comboStats)
+        .sort((a, b) => {
+          const rateA = comboStats[a].w / comboStats[a].t;
+          const rateB = comboStats[b].w / comboStats[b].t;
+          return rateB - rateA || comboStats[b].w - comboStats[a].w || comboStats[b].t - comboStats[a].t || a.localeCompare(b);
+        })
+        .slice(0, 15);
+
+      document.getElementById('chartComboWinRate').innerHTML = topCombo.map(k => {
+        const c = comboStats[k];
+        const data = (deckData && deckData[c.commander]) ? deckData[c.commander] : {};
+        return renderBar(
+          c.commander,
+          c.name,
+          Math.round((c.w / c.t) * 100),
+          null,
+          data.art || '',
+          true,
+          getPlayerColor(c.name),
+          '',
+          (c.w / c.t) >= 0.5
+        );
+      }).join('');
+    }
+
+    window.addParticipantRow = (pData = null) => {
+      const list = document.getElementById('participantsList');
+      const id = Math.random().toString(36).substring(7);
+      const div = document.createElement('div');
+      div.className = "participant-row p-4 bg-white/5 rounded border border-white/5 relative group";
+      div.innerHTML = `
+        <button type="button" onclick="this.parentElement.remove()" class="absolute -top-2 -right-2 w-6 h-6 bg-red-600 text-white rounded-full text-[10px] flex items-center justify-center shadow-lg z-20"><i class="fa-solid fa-xmark"></i></button>
+        <div class="grid grid-cols-2 gap-2 mb-3">
+          <input type="text" placeholder="PLAYER" class="p-name p-3 text-xs uppercase" autocomplete="off" value="${pData?.name || ''}">
+          <input type="text" placeholder="COMMANDER" list="commanderSuggestions" class="p-comm p-3 text-xs uppercase" autocomplete="off" value="${pData?.commander || ''}" oninput="debouncedSearch(this)">
+        </div>
+        <input type="radio" name="winner" value="${id}" id="win_${id}" class="hidden" ${pData?.winner ? 'checked' : ''}>
+        <label for="win_${id}" class="victor-selector">Winner</label>`;
+      list.appendChild(div);
+    };
+
+    let searchTimeout;
+    window.debouncedSearch = (inputEl) => {
+      const searchVal = (inputEl.value || '').trim();
+      clearTimeout(searchTimeout);
+
+      if (!searchVal || searchVal.length < 2) {
+        updateDatalist([]);
+        return;
+      }
+
+      const upperSearch = searchVal.toUpperCase();
+      const localMatches = Object.keys(deckData || {}).filter(k => k.includes(upperSearch));
+      if (localMatches.length > 0) updateDatalist(localMatches);
+
+      searchTimeout = setTimeout(() => fetchScryfallCommanders(searchVal), 500);
+    };
+
+    window.fetchScryfallCommanders = async (name) => {
+      try {
+        const clean = (name || '').trim();
+        if (clean.length < 2) return;
+
+        const query = `is:commander legal:commander name:"${clean}"`;
+        const url = `https://api.scryfall.com/cards/search?q=${encodeURIComponent(query)}&unique=cards&order=name`;
+
+        const r = await fetch(url);
+        if (!r.ok) return;
+
+        const d = await r.json();
+        if (!d.data || d.data.length === 0) return;
+
+        lastApiResults = d.data.slice(0, 15).map(card => card.name.toUpperCase().trim());
+        updateDatalist(lastApiResults);
+
+        const updates = {};
+
+        d.data.slice(0, 10).forEach(card => {
+          const upperName = card.name.toUpperCase().trim();
+          if (deckData[upperName]?.art) return;
+
+          const art =
+            card.image_uris?.art_crop ||
+            card.card_faces?.[0]?.image_uris?.art_crop ||
+            card.card_faces?.[1]?.image_uris?.art_crop ||
+            '';
+
+          if (!art) return;
+
+          updates[upperName] = {
+            art,
+            identity: card.color_identity || []
+          };
+
+          deckData[upperName] = updates[upperName];
+        });
+
+        if (Object.keys(updates).length > 0) {
+          await setDoc(deckDocRef, updates, { merge: true });
+        }
+      } catch (e) {
+        console.error("Scryfall commander search error:", e);
+      }
+    };
+
+    window.fetchCardDetails = async (typedName) => {
+      try {
+        const clean = (typedName || '').trim();
+        if (!clean || clean.toLowerCase() === 'unknown') return commanderKey(clean);
+
+        const typedUpper = commanderKey(clean);
+        if (deckData[typedUpper]?.art) return typedUpper;
+
+        let card = null;
+        let r = await fetch(`https://api.scryfall.com/cards/named?exact=${encodeURIComponent(clean)}`);
+
+        if (r.ok) {
+          card = await r.json();
+        } else {
+          const query = `is:commander legal:commander name:"${clean}"`;
+          const searchUrl = `https://api.scryfall.com/cards/search?q=${encodeURIComponent(query)}&unique=cards&order=name`;
+          r = await fetch(searchUrl);
+
+          if (!r.ok) return typedUpper;
+
+          const searchData = await r.json();
+          if (!searchData.data || searchData.data.length === 0) return typedUpper;
+
+          card = searchData.data[0];
+        }
+
+        const officialUpperName = commanderKey(card.name);
+        const canBeCommander =
+          card.legalities?.commander === 'legal' &&
+          (
+            card.type_line?.toLowerCase().includes('legendary creature') ||
+            card.oracle_text?.toLowerCase().includes('can be your commander') ||
+            card.oracle_text?.toLowerCase().includes('choose a background') ||
+            card.keywords?.includes('Partner') ||
+            card.keywords?.includes('Doctor\'s companion')
+          );
+
+        if (!canBeCommander) return typedUpper;
+
+        const art =
+          card.image_uris?.art_crop ||
+          card.card_faces?.[0]?.image_uris?.art_crop ||
+          card.card_faces?.[1]?.image_uris?.art_crop ||
+          '';
+
+        if (!art) return officialUpperName;
+
+        deckData[officialUpperName] = {
+          art,
+          identity: card.color_identity || []
+        };
+
+        await setDoc(deckDocRef, {
+          [officialUpperName]: deckData[officialUpperName]
+        }, { merge: true });
+
+        return officialUpperName;
+      } catch (e) {
+        console.error("Scryfall card detail error:", e);
+        return commanderKey(typedName);
+      }
+    };
+
+    window.resetForm = () => {
+      document.getElementById('formTitle').innerText = "Log Match";
+      document.getElementById('submitBtn').innerText = "Log Victory";
+      document.getElementById('editingMatchId').value = "";
+      document.getElementById('participantsList').innerHTML = "";
+      document.getElementById('dateInput').valueAsDate = new Date();
+      updateDatalist([]);
+      for (let i = 0; i < 3; i++) window.addParticipantRow();
+    };
+
+    document.getElementById('gameForm').onsubmit = async (e) => {
+      e.preventDefault();
+      const winId = document.querySelector('input[name="winner"]:checked')?.value;
+
+      const participants = Array.from(document.querySelectorAll('#participantsList > .participant-row')).map(row => ({
+        name: displayName(row.querySelector('.p-name').value, 'Unknown'),
+        commander: row.querySelector('.p-comm').value || 'Unknown',
+        winner: row.querySelector('input[type="radio"]').value === winId
+      }));
+
+      for (const p of participants) {
+        if (p.commander && p.commander !== 'Unknown') {
+          const officialCommanderName = await window.fetchCardDetails(p.commander);
+          if (officialCommanderName) p.commander = officialCommanderName;
+        }
+      }
+
+      const mId = document.getElementById('editingMatchId').value || `m_${Date.now()}`;
+      await setDoc(doc(matchesColRef, mId), {
+        date: document.getElementById('dateInput').value,
+        bracket: document.getElementById('bracketInput').value,
+        participants,
+        timestamp: Date.now()
+      }, { merge: true });
+
+      window.resetForm();
+    };
+
+    window.editMatch = (id) => {
+      const m = (games || []).find(x => x.id === id);
+      if (!m) return;
+      document.getElementById('formTitle').innerText = "Edit Entry";
+      document.getElementById('editingMatchId').value = m.id;
+      document.getElementById('dateInput').value = m.date;
+      document.getElementById('bracketInput').value = m.bracket;
+      document.getElementById('participantsList').innerHTML = "";
+      updateDatalist([]);
+      (m.participants || []).forEach(p => window.addParticipantRow(p));
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    window.handleDelete = async (id) => {
+      if (confirm("Erase from history?")) await deleteDoc(doc(matchesColRef, id));
+    };
+
+    window.resetForm();
+  </script>
+</body>
+</html>
